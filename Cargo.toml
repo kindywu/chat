@@ -1,0 +1,3 @@
+[workspace]
+members = ["chat_server", "notify_server"]
+resolver = "2"
