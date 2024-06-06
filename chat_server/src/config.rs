@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fmt::Display, path::Path};
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
@@ -29,10 +29,10 @@ pub struct AuthConfig {
 }
 
 impl Config {
-    pub async fn try_new(config_path: impl AsRef<Path>) -> Result<Self> {
-        let mut file = File::open(config_path)
+    pub async fn try_new(config_path: impl AsRef<Path> + Display) -> Result<Self> {
+        let mut file = File::open(&config_path)
             .await
-            .context("open config file failed")?;
+            .with_context(|| format!("try to open config file from {}", &config_path))?;
         let mut dst = String::new();
         file.read_to_string(&mut dst)
             .await
