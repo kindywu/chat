@@ -12,7 +12,12 @@ sqlx = { version = "0.7.4", features = [
     "tls-rustls",
 ] }
 sqlx-db-tester = "0.4.2"
-tokio = { version = "1.38.0", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.38.0", features = [
+    "rt",
+    "rt-multi-thread",
+    "macros",
+    "io-util",
+] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 axum = { version = "0.7.5", features = ["http2", "query", "tracing"] }
@@ -20,3 +25,4 @@ serde = { version = "1.0.203", features = ["derive"] }
 serde_yaml = "0.9.34"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"
+futures = "0.3.30"
