@@ -4,6 +4,24 @@ use argon2::{
 };
 use chat_server::AppError;
 
+fn main() -> anyhow::Result<()> {
+    let password = "password";
+
+    let password_hash = hash_password(password)?;
+
+    let is_valid = verify_password(password, &password_hash)?;
+
+    assert!(is_valid);
+
+    let password = "password2";
+
+    let is_valid = verify_password(password, &password_hash)?;
+
+    assert!(!is_valid);
+
+    Ok(())
+}
+
 fn hash_password(password: &str) -> Result<String, AppError> {
     let salt = SaltString::generate(&mut OsRng);
 
@@ -28,22 +46,4 @@ fn verify_password(password: &str, password_hash: &str) -> Result<bool, AppError
         .is_ok();
 
     Ok(is_valid)
-}
-
-fn main() -> anyhow::Result<()> {
-    let password = "password";
-
-    let password_hash = hash_password(password)?;
-
-    let is_valid = verify_password(password, &password_hash)?;
-
-    assert!(is_valid);
-
-    let password = "password2";
-
-    let is_valid = verify_password(password, &password_hash)?;
-
-    assert!(!is_valid);
-
-    Ok(())
 }
