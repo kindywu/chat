@@ -33,7 +33,7 @@ async fn init_test_db(url: String) -> Result<(TestPg, Pool<Postgres>)> {
     let pool = tdb.get_pool().await;
 
     // 插入准备数据
-    let sqls = include_str!("./test.sql").split(';');
+    let sqls = include_str!("../fixtures/test.sql").split(';');
     let mut ts = pool.begin().await.expect("begin transaction failed");
     for sql in sqls {
         if sql.trim().is_empty() {

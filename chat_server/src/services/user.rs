@@ -122,3 +122,27 @@ impl CreateUser {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::AppState;
+    use anyhow::Result;
+
+    #[tokio::test]
+    async fn find_user_by_noexist_email_should_work() -> Result<()> {
+        let (_tdb, state) = AppState::try_new_test().await?;
+        let result = state.find_user_by_email("abc@qq.com").await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_none());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn find_user_by_email_should_work() -> Result<()> {
+        let (_tdb, state) = AppState::try_new_test().await?;
+        let result = state.find_user_by_email("bob@acme.org").await;
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_some());
+        Ok(())
+    }
+}
