@@ -5,6 +5,9 @@ const JWT_DURATION: u64 = 60 * 60 * 24 * 7;
 const JWT_ISS: &str = "chat_server";
 const JWT_AUD: &str = "chat_web";
 
+// openssl genpkey -algorithm ed25519 -out private.pem
+// openssl pkey -in private.pem -pubout -out public.pem
+
 fn main() -> Result<()> {
     let encoding_pem = include_str!("../fixtures/encoding.pem");
     let decoding_pem = include_str!("../fixtures/decoding.pem");
