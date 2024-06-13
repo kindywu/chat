@@ -12,6 +12,7 @@ axum = { workspace = true }
 chrono = { workspace = true }
 dotenv = { workspace = true }
 jwt-simple = "0.12.9"
+nanoid = "0.4.0"
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 sqlx = { workspace = true }
@@ -19,6 +20,7 @@ thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+uuid = { version = "1.8.0", features = ["v7", "v8"] }
 
 [dev-dependencies]
 sqlx-db-tester = { workspace = true }
