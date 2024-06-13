@@ -110,3 +110,15 @@ pub struct CreateUser {
     /// Password of the user
     pub password: String,
 }
+
+#[cfg(test)]
+impl CreateUser {
+    pub fn new(fullname: &str, email: &str, workspace: &str, password: &str) -> Self {
+        Self {
+            fullname: fullname.to_string(),
+            email: email.to_string(),
+            workspace: workspace.to_string(),
+            password: password.to_string(),
+        }
+    }
+}
