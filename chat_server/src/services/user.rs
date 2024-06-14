@@ -61,7 +61,12 @@ impl AppState {
     }
 
     pub async fn verify_user(&self, input: &SigninUser) -> Result<Option<User>, AppError> {
-        if let Some(user) = self.find_user_by_email(&input.email).await? {
+        let user: Option<User> = sqlx::query_as("SELECT id, ws_id, fullname, email, password_hash, created_at FROM users WHERE email = $1")
+            .bind(&input.email)
+            .fetch_optional(&self.pool)
+            .await?;
+
+        if let Some(user) = user {
             let user_password_hash = user.password_hash.clone().unwrap_or_default();
             let is_valid = verify_password(&input.password, user_password_hash.as_str())?;
             if is_valid {
@@ -150,6 +155,16 @@ impl CreateUser {
         Self {
             workspace: workspace.to_string(),
             fullname: fullname.to_string(),
+            email: email.to_string(),
+            password: password.to_string(),
+        }
+    }
+}
+
+#[cfg(test)]
+impl SigninUser {
+    pub fn new(email: &str, password: &str) -> Self {
+        Self {
             email: email.to_string(),
             password: password.to_string(),
         }

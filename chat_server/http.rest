@@ -1,0 +1,49 @@
+@hostname = localhost
+@port = 8080
+@host = {{hostname}}:{{port}}
+
+
+### signup user
+
+POST http://{{host}}/api/signup  HTTP/1.1
+Content-Type: application/json
+
+{
+    "workspace": "acme",
+    "fullname": "Tyr Chen",
+    "email": "tchen@acme.org",
+    "password": "123456"
+}
+
+### signup user
+
+POST http://{{host}}/api/signup
+Content-Type: application/json
+
+{
+    "workspace": "acme",
+    "fullname": "Alice Chen",
+    "email": "alice@acme.org",
+    "password": "123456"
+}
+
+### signin user (valid)
+
+POST http://{{host}}/api/signin
+Content-Type: application/json
+
+{
+    "email": "tchen@acme.org",
+    "password": "123456"
+}
+
+### signin user (invalid)
+
+# @name signin
+POST http://{{host}}/api/signin
+Content-Type: application/json
+
+{
+    "email": "tchen@acme.org",
+    "password": "1234567"
+}

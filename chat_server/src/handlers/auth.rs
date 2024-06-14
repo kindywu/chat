@@ -46,7 +46,8 @@ mod test {
     use jwt_simple::reexports::serde_json;
 
     use crate::{
-        handlers::auth::{signup_handler, AuthOutput},
+        handlers::auth::{signin_handler, signup_handler, AuthOutput},
+        services::SigninUser,
         AppState, CreateUser, ErrorOutput,
     };
 
@@ -81,6 +82,22 @@ mod test {
         let ret: ErrorOutput = serde_json::from_slice(&body)?;
 
         assert_eq!(ret.error, "email already exists: tchen@acme.org");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn signin_should_work() -> Result<()> {
+        let (_tdb, state) = AppState::try_new_test().await?;
+        let input = SigninUser::new("tchen@acme.org", "123456");
+        let ret = signin_handler(State(Arc::new(state)), Json(input))
+            .await?
+            .into_response();
+        assert_eq!(ret.status(), StatusCode::OK);
+        let body = ret.into_body();
+        let body = to_bytes(body, usize::MAX).await?;
+        // let body = ret.into_body().collect().await?.to_bytes();
+        let ret: AuthOutput = serde_json::from_slice(&body)?;
+        assert_ne!(ret.token, "");
         Ok(())
     }
 }

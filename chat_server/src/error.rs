@@ -36,7 +36,10 @@ impl ErrorOutput {
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let status = match self {
+            AppError::EmailNotFound(_) => StatusCode::NOT_FOUND,
             AppError::EmailAlreadyExists(_) => StatusCode::CONFLICT,
+            AppError::PasswordHashError(_) => StatusCode::FORBIDDEN,
+            AppError::SignError(_) => StatusCode::FORBIDDEN,
             _ => unimplemented!(),
         };
 
