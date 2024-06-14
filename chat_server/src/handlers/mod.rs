@@ -30,6 +30,7 @@ pub fn get_router(state: AppState) -> Router {
                         .on_request(DefaultOnRequest::new().level(Level::INFO))
                         .on_response(
                             DefaultOnResponse::new()
+                                // .include_headers(true)
                                 .level(Level::INFO)
                                 .latency_unit(LatencyUnit::Micros),
                         ),
