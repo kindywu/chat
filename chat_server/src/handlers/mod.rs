@@ -1,12 +1,14 @@
 mod auth;
+mod chat;
 
 use std::{sync::Arc, time::Duration};
 
 use axum::{
-    middleware::from_fn,
+    middleware::{from_fn, from_fn_with_state},
     routing::{get, post},
     Router,
 };
+use chat::list_chats_handler;
 use tower::ServiceBuilder;
 
 use tower_http::{
@@ -18,7 +20,7 @@ use tower_http::{compression::CompressionLayer, timeout::TimeoutLayer};
 use tracing::Level;
 
 use crate::{
-    middlewares::{set_request_id, ServerTimeLayer},
+    middlewares::{set_request_id, verify_token, ServerTimeLayer},
     AppState,
 };
 
@@ -26,6 +28,8 @@ pub fn get_router(state: AppState) -> Router {
     let shared_app_state = Arc::new(state);
 
     let api = Router::new()
+        .route("/chats", get(list_chats_handler))
+        .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
         .route("/signup", post(auth::signup_handler))
         .route("/signin", post(auth::signin_handler))
         .layer(

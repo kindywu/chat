@@ -9,6 +9,8 @@ edition = "2021"
 anyhow = { workspace = true }
 argon2 = { version = "0.5.3", features = ["std"] }
 axum = { workspace = true }
+axum-auth = "0.7.0"
+axum-extra = "0.9.3"
 chrono = { workspace = true }
 dotenv = { workspace = true }
 futures-util = "0.3.30"

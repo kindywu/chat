@@ -1,6 +1,8 @@
+mod auth;
 mod request_id;
 mod server_time;
 
+pub use auth::verify_token;
 pub use request_id::set_request_id;
 pub use server_time::ServerTimeLayer;
 

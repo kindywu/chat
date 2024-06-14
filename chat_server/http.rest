@@ -27,15 +27,7 @@ Content-Type: application/json
     "password": "123456"
 }
 
-### signin user (valid)
 
-POST http://{{host}}/api/signin
-Content-Type: application/json
-
-{
-    "email": "tchen@acme.org",
-    "password": "123456"
-}
 
 ### signin user (invalid)
 
@@ -46,4 +38,28 @@ Content-Type: application/json
 {
     "email": "tchen@acme.org",
     "password": "1234567"
+}
+
+### signin user (valid)
+
+# @name signin
+POST http://{{host}}/api/signin
+Content-Type: application/json
+
+{
+    "email": "tchen@acme.org",
+    "password": "123456"
+}
+
+@token = {{signin.response.body.token}}
+
+### create chat
+GET http://{{host}}/api/chats
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "acme",
+    "members": [1, 2],
+    "public": false
 }
