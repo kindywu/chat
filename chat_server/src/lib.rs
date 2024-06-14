@@ -3,6 +3,7 @@ mod config;
 mod error;
 mod handlers;
 mod jwt;
+mod middlewares;
 mod services;
 
 pub use app_state::AppState;
