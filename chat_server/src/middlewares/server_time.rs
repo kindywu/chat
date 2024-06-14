@@ -58,20 +58,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use axum::{body::Body, extract::Request, response::IntoResponse, routing::get, Router};
+    use axum::{body::Body, extract::Request, routing::get, Router};
     use hyper::StatusCode;
     use tower::ServiceExt;
 
-    use crate::middlewares::{ServerTimeLayer, SERVER_TIME_HEADER};
-
-    async fn handler(_req: Request) -> impl IntoResponse {
-        (StatusCode::OK, "ok")
-    }
+    use crate::middlewares::{test_handler, ServerTimeLayer, SERVER_TIME_HEADER};
 
     #[tokio::test]
     async fn server_time_should_work() -> anyhow::Result<()> {
         let app = Router::new()
-            .route("/", get(handler))
+            .route("/", get(test_handler))
             .layer(ServerTimeLayer);
 
         let req = Request::builder().uri("/").body(Body::empty())?;

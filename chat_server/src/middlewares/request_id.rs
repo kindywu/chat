@@ -31,23 +31,16 @@ pub async fn set_request_id(mut req: Request, next: Next) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use axum::{
-        body::Body, extract::Request, middleware::from_fn, response::IntoResponse, routing::get,
-        Router,
-    };
+    use axum::{body::Body, extract::Request, middleware::from_fn, routing::get, Router};
     use hyper::StatusCode;
     use tower::ServiceExt;
 
-    use crate::middlewares::{set_request_id, REQUEST_ID_HEADER};
-
-    async fn handler(_req: Request) -> impl IntoResponse {
-        (StatusCode::OK, "ok")
-    }
+    use crate::middlewares::{set_request_id, test_handler, REQUEST_ID_HEADER};
 
     #[tokio::test]
     async fn set_request_id_should_work() -> anyhow::Result<()> {
         let app = Router::new()
-            .route("/", get(handler))
+            .route("/", get(test_handler))
             .layer(from_fn(set_request_id));
 
         let req = Request::builder().uri("/").body(Body::empty())?;
