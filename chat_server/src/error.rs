@@ -4,6 +4,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AppError {
+    #[error("email not found: {0}")]
+    EmailNotFound(String),
+
     #[error("email already exists: {0}")]
     EmailAlreadyExists(String),
 

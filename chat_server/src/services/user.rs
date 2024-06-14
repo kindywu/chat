@@ -1,3 +1,5 @@
+use argon2::PasswordHash;
+use argon2::PasswordVerifier;
 use serde::{Deserialize, Serialize};
 
 use crate::AppError;
@@ -57,6 +59,19 @@ impl AppState {
 
         Ok(user)
     }
+
+    pub async fn verify_user(&self, input: &SigninUser) -> Result<Option<User>, AppError> {
+        if let Some(user) = self.find_user_by_email(&input.email).await? {
+            let user_password_hash = user.password_hash.clone().unwrap_or_default();
+            let is_valid = verify_password(&input.password, user_password_hash.as_str())?;
+            if is_valid {
+                return Ok(Some(user));
+            } else {
+                return Ok(None);
+            }
+        }
+        Ok(None)
+    }
 }
 
 fn hash_password(password: &str) -> Result<String, AppError> {
@@ -71,6 +86,18 @@ fn hash_password(password: &str) -> Result<String, AppError> {
         .to_string();
 
     Ok(password_hash)
+}
+
+fn verify_password(password: &str, password_hash: &str) -> Result<bool, AppError> {
+    let argon2 = Argon2::default();
+    let password_hash = PasswordHash::new(password_hash)?;
+
+    // Verify password
+    let is_valid = argon2
+        .verify_password(password.as_bytes(), &password_hash)
+        .is_ok();
+
+    Ok(is_valid)
 }
 
 #[derive(Debug, Clone, FromRow, Serialize, Deserialize, PartialEq)]
@@ -108,6 +135,12 @@ pub struct CreateUser {
     /// Workspace name - if not exists, create one
     pub workspace: String,
     /// Password of the user
+    pub password: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SigninUser {
+    pub email: String,
     pub password: String,
 }
 

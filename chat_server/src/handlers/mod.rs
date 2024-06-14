@@ -12,7 +12,9 @@ use crate::AppState;
 pub fn get_router(state: AppState) -> Router {
     let shared_app_state = Arc::new(state);
 
-    let api = Router::new().route("/signup", post(auth::signup_handler));
+    let api = Router::new()
+        .route("/signup", post(auth::signup_handler))
+        .route("/signin", post(auth::signin_handler));
 
     Router::new()
         .route("/online", get(|| async { "chat sever online" }))
