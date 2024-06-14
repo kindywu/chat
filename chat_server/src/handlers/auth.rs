@@ -42,8 +42,7 @@ mod test {
     use std::sync::Arc;
 
     use anyhow::Result;
-    use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-    use http_body_util::BodyExt;
+    use axum::{body::to_bytes, extract::State, http::StatusCode, response::IntoResponse, Json};
     use jwt_simple::reexports::serde_json;
 
     use crate::{
@@ -59,7 +58,9 @@ mod test {
             .await?
             .into_response();
         assert_eq!(ret.status(), StatusCode::CREATED);
-        let body = ret.into_body().collect().await?.to_bytes();
+        let body = ret.into_body();
+        let body = to_bytes(body, usize::MAX).await?;
+        // let body = ret.into_body().collect().await?.to_bytes();
         let ret: AuthOutput = serde_json::from_slice(&body)?;
         assert_ne!(ret.token, "");
         Ok(())
@@ -74,7 +75,9 @@ mod test {
             .await
             .into_response();
         assert_eq!(ret.status(), StatusCode::CONFLICT);
-        let body = ret.into_body().collect().await?.to_bytes();
+        let body = ret.into_body();
+        let body = to_bytes(body, usize::MAX).await?;
+        // let body = body.collect().await?.to_bytes();
         let ret: ErrorOutput = serde_json::from_slice(&body)?;
 
         assert_eq!(ret.error, "email already exists: tchen@acme.org");

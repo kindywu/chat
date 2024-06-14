@@ -360,6 +360,7 @@ dependencies = [
  "chrono",
  "dotenv",
  "http-body-util",
+ "hyper",
  "jwt-simple",
  "nanoid",
  "serde",
