@@ -55,10 +55,8 @@ jobs:
       - name: Execute rust tests
         run: cargo nextest run --all-features
         env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: localhost
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v2
         id: git-cliff

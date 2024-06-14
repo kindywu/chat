@@ -39,9 +39,15 @@ mod test {
             let encoding_pem = include_str!("../fixtures/encoding.pem");
             let decoding_pem = include_str!("../fixtures/decoding.pem");
 
-            // 读取.env文件，读取数据库地址
-            dotenv::from_filename("./chat_server/examples/.env").ok();
-            let url = env::var("DATABASE_URL")?;
+            let url = match env::var("DATABASE_URL") {
+                Ok(url) => url,
+                Err(_) => {
+                    // 读取.env文件，读取数据库地址
+                    dotenv::from_filename("./chat_server/examples/.env").ok();
+                    env::var("DATABASE_URL")?
+                }
+            };
+
             println!("{url}");
 
             // 初始化测试数据库
