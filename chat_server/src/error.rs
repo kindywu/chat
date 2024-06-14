@@ -1,5 +1,5 @@
 use axum::{http::StatusCode, response::IntoResponse, Json};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -20,9 +20,17 @@ pub enum AppError {
     SignError(#[from] jwt_simple::Error),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorOutput {
-    error: String,
+    pub error: String,
+}
+
+impl ErrorOutput {
+    pub fn new(error: impl Into<String>) -> Self {
+        Self {
+            error: error.into(),
+        }
+    }
 }
 
 impl IntoResponse for AppError {

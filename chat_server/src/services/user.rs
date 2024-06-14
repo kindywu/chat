@@ -146,11 +146,11 @@ pub struct SigninUser {
 
 #[cfg(test)]
 impl CreateUser {
-    pub fn new(fullname: &str, email: &str, workspace: &str, password: &str) -> Self {
+    pub fn new(workspace: &str, fullname: &str, email: &str, password: &str) -> Self {
         Self {
+            workspace: workspace.to_string(),
             fullname: fullname.to_string(),
             email: email.to_string(),
-            workspace: workspace.to_string(),
             password: password.to_string(),
         }
     }
