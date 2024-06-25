@@ -9,14 +9,13 @@ use sha1::{Digest, Sha1};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatFile {
-    pub ws_id: u64,
+    pub ws_id: i64,
     pub ext: String, // extract ext from filename or mime type
     pub hash: String,
 }
 
-#[allow(dead_code)]
 impl ChatFile {
-    pub fn new(ws_id: u64, filename: &str, data: &[u8]) -> Self {
+    pub fn new(ws_id: i64, filename: &str, data: &[u8]) -> Self {
         let hash = Sha1::digest(data);
         Self {
             ws_id,
@@ -61,7 +60,7 @@ impl FromStr for ChatFile {
             )));
         }
 
-        let Ok(ws_id) = parts[0].parse::<u64>() else {
+        let Ok(ws_id) = parts[0].parse::<i64>() else {
             return Err(AppError::ChatFileError(format!(
                 "Invalid workspace id: {}",
                 parts[1]

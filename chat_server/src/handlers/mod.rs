@@ -1,5 +1,6 @@
 mod auth;
 mod chat;
+mod message;
 mod model;
 
 use std::{sync::Arc, time::Duration};
@@ -10,6 +11,7 @@ use axum::{
     Router,
 };
 use chat::{create_chat_handler, list_chats_handler};
+use message::{file_handler, upload_handler};
 use tower::ServiceBuilder;
 
 use tower_http::{
@@ -31,6 +33,8 @@ pub fn get_router(state: AppState) -> Router {
     let api = Router::new()
         .route("/chats", get(list_chats_handler).post(create_chat_handler))
         .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
+        .route("/upload", post(upload_handler))
+        .route("/files/:ws_id/*path", get(file_handler))
         .route("/signup", post(auth::signup_handler))
         .route("/signin", post(auth::signin_handler))
         .layer(

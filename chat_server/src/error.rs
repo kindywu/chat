@@ -1,4 +1,7 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use std::io;
+
+use axum::{extract::multipart::MultipartError, http::StatusCode, response::IntoResponse, Json};
+use hyper::header::InvalidHeaderValue;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -9,6 +12,18 @@ pub enum AppError {
 
     #[error("email already exists: {0}")]
     EmailAlreadyExists(String),
+
+    #[error("file not found: {0}")]
+    FileNotFound(String),
+
+    #[error("io error: {0}")]
+    IoError(#[from] io::Error),
+
+    #[error("invalid header value error: {0}")]
+    InvalidHeaderValue(#[from] InvalidHeaderValue),
+
+    #[error("multipart error: {0}")]
+    MultipartError(#[from] MultipartError),
 
     #[error("sql error: {0}")]
     SqlxError(#[from] sqlx::Error),
