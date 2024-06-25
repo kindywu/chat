@@ -19,8 +19,11 @@ pub enum AppError {
     #[error("jwt sign hash error: {0}")]
     SignError(#[from] jwt_simple::Error),
 
-    #[error("create chat with error: {0}")]
+    #[error("create chat error: {0}")]
     CreateChatError(String),
+
+    #[error("chat file error: {0}")]
+    ChatFileError(String),
 }
 
 #[derive(Debug, Serialize, Deserialize)]

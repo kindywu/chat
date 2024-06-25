@@ -85,7 +85,7 @@ mod test {
         let ret: ErrorOutput = serde_json::from_slice(&body)?;
         assert_eq!(
             ret.error,
-            "create chat with error: the chat members ([99]) is not exist"
+            "create chat error: the chat members ([99]) is not exist"
         );
         Ok(())
     }

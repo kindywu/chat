@@ -1,5 +1,6 @@
 mod auth;
 mod chat;
+mod model;
 
 use std::{sync::Arc, time::Duration};
 

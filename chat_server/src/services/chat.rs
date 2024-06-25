@@ -116,7 +116,7 @@ mod test {
         assert!(matches!(err, AppError::CreateChatError(_)));
         assert_eq!(
             err.to_string(),
-            "create chat with error: the chat members ([99]) is not exist".to_string()
+            "create chat error: the chat members ([99]) is not exist".to_string()
         );
         Ok(())
     }
