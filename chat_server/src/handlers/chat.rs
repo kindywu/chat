@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::State, response::IntoResponse, Extension, Json};
 use hyper::StatusCode;
-use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 use crate::{
     services::{CreateChat, User},
@@ -22,12 +22,12 @@ pub(crate) async fn create_chat_handler(
     Json(input): Json<CreateChat>,
 ) -> Result<impl IntoResponse, AppError> {
     let chat_id = state.create_chat(&input, user.ws_id).await?;
-    Ok((StatusCode::CREATED, Json(CreateChatOutput { chat_id })))
-}
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CreateChatOutput {
-    chat_id: i64,
+    let chat_id: serde_json::Value = json!({
+        "chat_id": chat_id,
+    });
+
+    Ok((StatusCode::CREATED, Json(chat_id)))
 }
 
 #[cfg(test)]
@@ -39,9 +39,10 @@ mod test {
     use axum::{extract::State, response::IntoResponse, Extension, Json};
     use http_body_util::BodyExt;
     use hyper::StatusCode;
+    use serde_json::Value;
 
     use crate::{
-        handlers::chat::{create_chat_handler, CreateChatOutput},
+        handlers::chat::create_chat_handler,
         services::{CreateChat, User},
         AppState, ErrorOutput,
     };
@@ -61,8 +62,10 @@ mod test {
         // let body = ret.into_body();
         // let body = to_bytes(body, usize::MAX).await?;
         let body = ret.into_body().collect().await?.to_bytes();
-        let ret: CreateChatOutput = serde_json::from_slice(&body)?;
-        assert!(ret.chat_id.is_positive());
+        let ret: Value = serde_json::from_slice(&body)?;
+        let chat_id = ret.get("chat_id");
+        assert!(chat_id.is_some());
+        assert!(chat_id.unwrap().is_number());
         Ok(())
     }
 
