@@ -54,12 +54,12 @@ Content-Type: application/json
 @token = {{signin.response.body.token}}
 
 ### create chat
-GET http://{{host}}/api/chats
+POST http://{{host}}/api/chats
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
     "name": "acme",
-    "members": [1, 2],
+    "members": [1, 2, 1, 2],
     "public": false
 }
