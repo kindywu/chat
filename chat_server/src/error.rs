@@ -18,6 +18,9 @@ pub enum AppError {
 
     #[error("jwt sign hash error: {0}")]
     SignError(#[from] jwt_simple::Error),
+
+    #[error("create chat with error: {0}")]
+    CreateChatError(String),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,7 +43,8 @@ impl IntoResponse for AppError {
             AppError::EmailAlreadyExists(_) => StatusCode::CONFLICT,
             AppError::PasswordHashError(_) => StatusCode::FORBIDDEN,
             AppError::SignError(_) => StatusCode::FORBIDDEN,
-            _ => unimplemented!(),
+            AppError::CreateChatError(_) => StatusCode::BAD_REQUEST,
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         let err_output = ErrorOutput {

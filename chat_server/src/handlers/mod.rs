@@ -8,7 +8,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use chat::list_chats_handler;
+use chat::{create_chat_handler, list_chats_handler};
 use tower::ServiceBuilder;
 
 use tower_http::{
@@ -28,7 +28,7 @@ pub fn get_router(state: AppState) -> Router {
     let shared_app_state = Arc::new(state);
 
     let api = Router::new()
-        .route("/chats", get(list_chats_handler))
+        .route("/chats", get(list_chats_handler).post(create_chat_handler))
         .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
         .route("/signup", post(auth::signup_handler))
         .route("/signin", post(auth::signin_handler))

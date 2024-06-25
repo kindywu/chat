@@ -105,7 +105,7 @@ fn verify_password(password: &str, password_hash: &str) -> Result<bool, AppError
     Ok(is_valid)
 }
 
-#[derive(Debug, Clone, FromRow, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, FromRow, Default, Serialize, Deserialize, PartialEq)]
 pub struct User {
     pub id: i64,
     pub ws_id: i64,
