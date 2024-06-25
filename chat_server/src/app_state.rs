@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::{
     jwt::{DecodingKey, EncodingKey},
     Config,
@@ -6,6 +8,7 @@ use anyhow::{Context, Result};
 use sqlx::PgPool;
 
 pub struct AppState {
+    pub(crate) config: Config,
     pub(crate) pool: PgPool,
     #[allow(dead_code)]
     pub(crate) dk: DecodingKey,
@@ -19,15 +22,28 @@ impl AppState {
             .context("connect to db failed")?;
         let dk = DecodingKey::load(&config.auth.pk).context("load pk failed")?;
         let ek = EncodingKey::load(&config.auth.sk).context("load sk failed")?;
-        Ok(Self { pool, dk, ek })
+        Ok(Self {
+            config,
+            pool,
+            dk,
+            ek,
+        })
+    }
+}
+
+impl Deref for AppState {
+    type Target = Config;
+
+    fn deref(&self) -> &Self::Target {
+        &self.config
     }
 }
 
 #[cfg(test)]
 mod test {
     use crate::{
-        jwt::{DecodingKey, EncodingKey},
-        AppState,
+        config::{AuthConfig, DbConfig, FileConfig},
+        AppState, Config,
     };
     use anyhow::Result;
     use sqlx::{Pool, Postgres};
@@ -36,27 +52,37 @@ mod test {
 
     impl AppState {
         pub async fn try_new_test() -> Result<(TestPg, Self)> {
-            let encoding_pem = include_str!("../fixtures/encoding.pem");
-            let decoding_pem = include_str!("../fixtures/decoding.pem");
-
+            // read test db server
             let url = match env::var("DATABASE_URL") {
                 Ok(url) => url,
                 Err(_) => {
                     // 读取.env文件，读取数据库地址
-                    dotenv::from_filename("./chat_server/examples/.env").ok();
+                    dotenv::from_filename("./chat_server/.env").ok();
                     env::var("DATABASE_URL")?
                 }
             };
 
-            println!("{url}");
-
+            println!("test db server: {url}");
             // 初始化测试数据库
-            let (tdb, pool) = AppState::init_test_db(url).await?;
+            let (tdb, _pool) = AppState::init_test_db(url).await?;
             println!("test db name: {}", tdb.dbname);
 
-            let ek = EncodingKey::load(encoding_pem)?;
-            let dk = DecodingKey::load(decoding_pem)?;
-            Ok((tdb, Self { pool, dk, ek }))
+            let encoding_pem = include_str!("../fixtures/encoding.pem");
+            let decoding_pem = include_str!("../fixtures/decoding.pem");
+
+            let config = Config {
+                db: DbConfig { url: tdb.url() },
+                file: FileConfig {
+                    base_dir: "/tmp/chat_server".into(),
+                },
+                auth: AuthConfig {
+                    sk: encoding_pem.to_string(),
+                    pk: decoding_pem.to_string(),
+                },
+                ..Default::default()
+            };
+
+            Ok((tdb, Self::try_new(config).await?))
         }
 
         async fn init_test_db(url: String) -> Result<(TestPg, Pool<Postgres>)> {

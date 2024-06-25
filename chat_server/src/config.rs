@@ -1,31 +1,40 @@
-use std::{fmt::Display, path::Path};
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use tokio::{fs::File, io::AsyncReadExt};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct Config {
     pub listen: ListenConfig,
     pub db: DbConfig,
     pub auth: AuthConfig,
+    pub file: FileConfig,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct ListenConfig {
     pub host: String,
     pub port: u16,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct DbConfig {
     pub url: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct AuthConfig {
     pub sk: String,
     pub pk: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct FileConfig {
+    pub base_dir: PathBuf,
 }
 
 impl Config {
