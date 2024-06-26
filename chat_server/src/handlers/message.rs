@@ -124,6 +124,12 @@ mod test {
     };
 
     #[tokio::test]
+    async fn should_work() -> Result<()> {
+        upload_handler_should_work().await?;
+        file_handler_should_work().await?;
+        Ok(())
+    }
+
     async fn upload_handler_should_work() -> Result<()> {
         let (_tdb, state) = AppState::try_new_test().await?;
 
@@ -150,7 +156,12 @@ mod test {
             .file_name("demo.jpg")
             .mime_type("image/jpg");
 
-        let form = MultipartForm::new().add_part("file", image_part);
+        let form = MultipartForm::new().add_part("file", image_part).add_part(
+            "file2",
+            Part::bytes(b"Hello, World!".as_slice())
+                .file_name("hello.txt")
+                .mime_type("plain/txt"),
+        );
 
         let response = server
             .post("/upload")
@@ -161,16 +172,18 @@ mod test {
         assert_eq!(response.status_code(), StatusCode::OK);
         let body = response.as_bytes();
         let files: Vec<&str> = serde_json::from_slice(body)?;
-        assert_eq!(files.len(), 1);
+        assert_eq!(files.len(), 2);
         assert_eq!(
-            files[0],
-            "/files/1/8ab/d00/a3253d525b37958381ba1cb044d1cad887.jpg"
+            files,
+            [
+                "/files/1/8ab/d00/a3253d525b37958381ba1cb044d1cad887.jpg",
+                "/files/1/0a0/a9f/2a6772942557ab5355d76af442f8f65e01.txt"
+            ]
         );
 
         Ok(())
     }
 
-    #[tokio::test]
     async fn file_handler_should_work() -> Result<()> {
         let (_tdb, state) = AppState::try_new_test().await?;
         let user = User {
