@@ -88,16 +88,73 @@ mod test {
     use anyhow::Result;
     use axum::{
         extract::{Path, State},
+        middleware::from_fn_with_state,
         response::IntoResponse,
-        Extension,
+        routing::post,
+        Extension, Router,
+    };
+    use axum_test::{
+        multipart::{MultipartForm, Part},
+        TestServer,
     };
     use http_body_util::BodyExt;
     use hyper::StatusCode;
+    use serde_json::json;
 
-    use crate::{handlers::message::file_handler, services::User, AppState};
+    use crate::{
+        handlers::{
+            auth::{signin_handler, AuthOutput},
+            message::{file_handler, upload_handler},
+        },
+        middlewares::verify_token,
+        services::User,
+        AppState,
+    };
 
     #[tokio::test]
     async fn upload_handler_should_work() -> Result<()> {
+        let (_tdb, state) = AppState::try_new_test().await?;
+
+        let shared_app_state = Arc::new(state);
+        let app = Router::new()
+            .route("/upload", post(upload_handler))
+            .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
+            .route("/signin", post(signin_handler))
+            .with_state(shared_app_state);
+
+        let server = TestServer::new(app)?;
+
+        let signin = json!({
+            "email": "tchen@acme.org","password": "123456"
+        });
+        let response = server.post("/signin").json(&signin).await;
+        assert_eq!(response.status_code(), StatusCode::OK);
+
+        let body = response.as_bytes();
+        let auth: AuthOutput = serde_json::from_slice(body)?;
+
+        let image_bytes = include_bytes!("../../assets/demo.jpg");
+        let image_part = Part::bytes(image_bytes.as_slice())
+            .file_name("demo.jpg")
+            .mime_type("image/jpg");
+
+        let form = MultipartForm::new().add_part("file", image_part);
+
+        let response = server
+            .post("/upload")
+            .multipart(form)
+            .authorization_bearer(auth.token)
+            .await;
+
+        assert_eq!(response.status_code(), StatusCode::OK);
+        let body = response.as_bytes();
+        let files: Vec<&str> = serde_json::from_slice(body)?;
+        assert_eq!(files.len(), 1);
+        assert_eq!(
+            files[0],
+            "/files/1/8ab/d00/a3253d525b37958381ba1cb044d1cad887.jpg"
+        );
+
         Ok(())
     }
 

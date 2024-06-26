@@ -34,7 +34,7 @@ pub(crate) async fn signin_handler(
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthOutput {
-    token: String,
+    pub token: String,
 }
 
 #[cfg(test)]
