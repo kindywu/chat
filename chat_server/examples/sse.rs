@@ -1,4 +1,5 @@
 use axum::{
+    debug_handler,
     response::sse::{Event, KeepAlive, Sse},
     routing::get,
     Router,
@@ -37,6 +38,7 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
+#[debug_handler]
 async fn sse_handler() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // A `Stream` that repeats an event every second
     let stream = stream::repeat_with(|| Event::default().data("hi!"))
