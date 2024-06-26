@@ -80,3 +80,44 @@ pub(crate) async fn upload_handler(
 
     Ok((StatusCode::OK, Json(urls)))
 }
+
+#[cfg(test)]
+mod test {
+    use std::sync::Arc;
+
+    use anyhow::Result;
+    use axum::{
+        extract::{Path, State},
+        response::IntoResponse,
+        Extension,
+    };
+    use http_body_util::BodyExt;
+    use hyper::StatusCode;
+
+    use crate::{handlers::message::file_handler, services::User, AppState};
+
+    #[tokio::test]
+    async fn upload_handler_should_work() -> Result<()> {
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn file_handler_should_work() -> Result<()> {
+        let (_tdb, state) = AppState::try_new_test().await?;
+        let user = User {
+            ws_id: 1,
+            ..Default::default()
+        };
+
+        let ws_id = 1;
+        let path = "0a0/a9f/2a6772942557ab5355d76af442f8f65e01.txt".to_string();
+        let ret = file_handler(Extension(user), State(Arc::new(state)), Path((ws_id, path)))
+            .await?
+            .into_response();
+
+        assert_eq!(ret.status(), StatusCode::OK);
+        let body = ret.into_body().collect().await?.to_bytes().to_vec();
+        assert_eq!(body, b"Hello, World!");
+        Ok(())
+    }
+}
