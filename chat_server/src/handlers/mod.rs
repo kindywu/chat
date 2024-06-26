@@ -32,9 +32,9 @@ pub fn get_router(state: AppState) -> Router {
 
     let api = Router::new()
         .route("/chats", get(list_chats_handler).post(create_chat_handler))
-        .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
         .route("/upload", post(upload_handler))
         .route("/files/:ws_id/*path", get(file_handler))
+        .layer(from_fn_with_state(shared_app_state.clone(), verify_token))
         .route("/signup", post(auth::signup_handler))
         .route("/signin", post(auth::signin_handler))
         .layer(

@@ -63,3 +63,34 @@ Authorization: Bearer {{token}}
     "members": [1, 2, 1, 2],
     "public": false
 }
+
+### upload files
+
+POST http://{{host}}/api/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; filename="demo.png"
+Content-Type: application/octet-stream
+
+< /root/workspace/rust/chat/chat_server/assets/demo.jpg
+--MyBoundary
+Content-Disposition: form-data; filename="hello.txt"
+Content-Type: text/plain
+
+Hello, World!
+--MyBoundary--
+
+
+### get png file
+
+GET http://{{host}}/api/files/1/8ab/d00/a3253d525b37958381ba1cb044d1cad887.png
+Authorization: Bearer {{token}}
+
+
+### get text file
+GET http://{{host}}/api/files/1/0a0/a9f/2a6772942557ab5355d76af442f8f65e01.txt
+Authorization: Bearer {{token}}
+
+### send a message

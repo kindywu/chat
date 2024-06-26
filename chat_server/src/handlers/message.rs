@@ -48,14 +48,14 @@ pub(crate) async fn upload_handler(
 
     let mut urls = Vec::new();
     while let Some(field) = multipart.next_field().await? {
-        let Some(name) = field.name() else {
-            warn!("multipart field name is not exist");
-            continue;
-        };
-        if name != "fileupload" {
-            warn!("multipart field name is not fileupload");
-            continue;
-        }
+        // let Some(name) = field.name() else {
+        //     warn!("multipart field name is not exist");
+        //     continue;
+        // };
+        // if name != "fileupload" {
+        //     warn!("multipart field name is not fileupload");
+        //     continue;
+        // }
 
         let Some(filename) = field.file_name() else {
             warn!("Failed to read filename from multipart field");
