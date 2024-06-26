@@ -11,9 +11,10 @@ use crate::{
 
 pub(crate) async fn list_chats_handler(
     Extension(user): Extension<User>,
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, AppError> {
-    Ok((StatusCode::OK, Json(user)))
+    let chat = state.fetch_chats(user.ws_id as _).await?;
+    Ok((StatusCode::OK, Json(chat)))
 }
 
 pub(crate) async fn create_chat_handler(

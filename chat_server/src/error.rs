@@ -39,6 +39,9 @@ pub enum AppError {
 
     #[error("chat file error: {0}")]
     ChatFileError(String),
+
+    #[error("verify chat error: {0}")]
+    VerifyChat(String),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -62,6 +65,7 @@ impl IntoResponse for AppError {
             AppError::PasswordHashError(_) => StatusCode::FORBIDDEN,
             AppError::SignError(_) => StatusCode::FORBIDDEN,
             AppError::CreateChatError(_) => StatusCode::BAD_REQUEST,
+            AppError::VerifyChat(_) => StatusCode::FORBIDDEN,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 

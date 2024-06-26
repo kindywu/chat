@@ -11,7 +11,7 @@ use axum::{
     Router,
 };
 use chat::{create_chat_handler, list_chats_handler};
-use message::{file_handler, upload_handler};
+use message::{file_handler, list_message_handler, upload_handler};
 use tower::ServiceBuilder;
 
 use tower_http::{
@@ -23,7 +23,7 @@ use tower_http::{compression::CompressionLayer, timeout::TimeoutLayer};
 use tracing::Level;
 
 use crate::{
-    middlewares::{set_request_id, verify_token, ServerTimeLayer},
+    middlewares::{set_request_id, verify_chat, verify_token, ServerTimeLayer},
     AppState,
 };
 
@@ -31,6 +31,8 @@ pub fn get_router(state: AppState) -> Router {
     let shared_app_state = Arc::new(state);
 
     let api = Router::new()
+        .route("/:id/messages", get(list_message_handler))
+        .layer(from_fn_with_state(shared_app_state.clone(), verify_chat))
         .route("/chats", get(list_chats_handler).post(create_chat_handler))
         .route("/upload", post(upload_handler))
         .route("/files/:ws_id/*path", get(file_handler))

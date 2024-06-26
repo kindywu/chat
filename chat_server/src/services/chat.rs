@@ -1,7 +1,9 @@
 use std::collections::HashSet;
 
 use crate::{AppError, AppState};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 
 use super::ChatType;
 
@@ -10,6 +12,16 @@ pub struct CreateChat {
     pub name: Option<String>,
     pub members: HashSet<i64>,
     pub public: bool,
+}
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize, PartialEq)]
+pub struct Chat {
+    pub id: i64,
+    pub ws_id: i64,
+    pub name: Option<String>,
+    pub r#type: ChatType,
+    pub members: Vec<i64>,
+    pub created_at: DateTime<Utc>,
 }
 
 impl AppState {
@@ -76,6 +88,36 @@ impl AppState {
         .await?;
 
         Ok(chat_id)
+    }
+
+    pub async fn fetch_chats(&self, ws_id: u64) -> Result<Vec<Chat>, AppError> {
+        let chats = sqlx::query_as(
+            r#"
+            SELECT id, ws_id, name, type, members, created_at
+            FROM chats
+            WHERE ws_id = $1
+            "#,
+        )
+        .bind(ws_id as i64)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(chats)
+    }
+
+    pub async fn is_chat_member(&self, chat_id: i64, user_id: i64) -> Result<bool, AppError> {
+        let is_member = sqlx::query(
+            r#"
+            SELECT 1
+            FROM chats
+            WHERE id = $1 AND $2 = ANY(members)
+            "#,
+        )
+        .bind(chat_id)
+        .bind(user_id)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(is_member.is_some())
     }
 }
 

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Multipart, Path, State},
+    extract::{Multipart, Path, Query, State},
     response::IntoResponse,
     Extension, Json,
 };
@@ -9,9 +9,21 @@ use hyper::{HeaderMap, StatusCode};
 use tokio::fs;
 use tracing::warn;
 
-use crate::{services::User, AppError, AppState};
+use crate::{
+    services::{ListMessages, User},
+    AppError, AppState,
+};
 
 use super::model::ChatFile;
+
+pub(crate) async fn list_message_handler(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<u64>,
+    Query(input): Query<ListMessages>,
+) -> Result<impl IntoResponse, AppError> {
+    let messages = state.list_messages(input, id).await?;
+    Ok(Json(messages))
+}
 
 pub(crate) async fn file_handler(
     Extension(user): Extension<User>,

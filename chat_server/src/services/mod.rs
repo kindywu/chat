@@ -1,9 +1,11 @@
 mod chat;
+mod message;
 mod user;
 mod workspace;
+use serde::{Deserialize, Serialize};
 
 pub use chat::*;
-use serde::{Deserialize, Serialize};
+pub use message::*;
 pub use user::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, PartialOrd, sqlx::Type)]
