@@ -549,8 +549,6 @@ dependencies = [
  "sse-client",
  "thiserror",
  "tokio",
- "tokio-stream",
- "tokio-util",
  "tower",
  "tower-http",
  "tracing",
@@ -738,6 +736,20 @@ name = "ct-codecs"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3b7eb4404b8195a9abb6356f4ac07d8ba267045c8d6d220ac4dc992e6cc75df"
+
+[[package]]
+name = "dashmap"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "804c8821570c3f8b70230c2ba75ffa5c0f9a4189b9a432b6656c536712acae28"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+ "hashbrown",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
 
 [[package]]
 name = "der"
@@ -1740,14 +1752,21 @@ name = "notify_server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-stream",
  "axum",
+ "dashmap",
  "dotenv",
  "futures",
+ "futures-util",
+ "nanoid",
  "serde",
  "serde_yaml",
  "sqlx",
  "sqlx-db-tester",
+ "sse-client",
  "tokio",
+ "tokio-stream",
+ "tokio-util",
  "tracing",
  "tracing-subscriber",
 ]
