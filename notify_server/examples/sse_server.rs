@@ -5,14 +5,12 @@ use axum::{
     routing::get,
     Router,
 };
+use chrono::Local;
 use dashmap::DashMap;
 use futures_util::stream::Stream;
 use nanoid::nanoid;
 use std::{convert::Infallible, ops::Deref, sync::Arc, time::Duration};
-use tokio::{
-    sync::mpsc::{self, Sender},
-    time::Instant,
-};
+use tokio::sync::mpsc::{self, Sender};
 use tracing::warn;
 
 #[derive(Clone, Debug)]
@@ -45,9 +43,10 @@ async fn main() {
     tokio::spawn(async move {
         loop {
             for entry in task_state.map.iter() {
-                let sender = entry.value().clone(); // 克隆 Sender
+                let sender = entry.value(); // 克隆 Sender
                 let name = entry.key(); // 克隆 key
-                let msg = format!("hello {name}. now is {:?}", Instant::now());
+
+                let msg = format!("hello {name}. now is {:?}", Local::now());
                 if let Err(e) = sender.send(msg).await {
                     warn!("error happen: {e}, {name} quit");
                 }
