@@ -7,10 +7,12 @@ use axum::{
 };
 use chrono::Local;
 use dashmap::DashMap;
+use futures::StreamExt;
 use futures_util::stream::Stream;
 use nanoid::nanoid;
 use std::{convert::Infallible, ops::Deref, sync::Arc, time::Duration};
 use tokio::sync::mpsc::{self, Sender};
+use tokio_stream::wrappers::ReceiverStream;
 use tracing::warn;
 
 #[derive(Clone, Debug)]
@@ -71,7 +73,7 @@ async fn main() {
 async fn sse_handler(
     State(state): State<AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let (tx, mut rx) = mpsc::channel::<String>(100);
+    let (tx, rx) = mpsc::channel::<String>(100);
 
     loop {
         let id = nanoid!(10);
@@ -80,10 +82,12 @@ async fn sse_handler(
         }
     }
 
-    let stream = async_stream::stream! {
-        while let Some(message) = rx.recv().await {
-            yield Ok(Event::default().data(message));
-        }
-    };
+    let stream = ReceiverStream::new(rx).map(|v| Ok(Event::default().data(v)));
+
+    // let stream = async_stream::stream! {
+    //     while let Some(message) = rx.recv().await {
+    //         yield Ok(Event::default().data(message));
+    //     }
+    // };
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
