@@ -45,8 +45,8 @@ async fn main() {
     tokio::spawn(async move {
         loop {
             for entry in task_state.map.iter() {
-                let sender = entry.value(); // 克隆 Sender
-                let name = entry.key(); // 克隆 key
+                let sender = entry.value();
+                let name = entry.key();
 
                 let msg = format!("hello {name}. now is {:?}", Local::now());
                 if let Err(e) = sender.send(msg).await {
