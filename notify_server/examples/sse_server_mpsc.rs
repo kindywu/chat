@@ -1,7 +1,10 @@
 use axum::{
     debug_handler,
     extract::State,
-    response::sse::{Event, KeepAlive, Sse},
+    response::{
+        sse::{Event, KeepAlive, Sse},
+        Html,
+    },
     routing::get,
     Router,
 };
@@ -58,9 +61,23 @@ async fn main() {
         }
     });
 
+    let html = r#"
+        Open Console
+        <script>
+            const es = new EventSource("http://localhost:3000/sse");
+            es.onopen = () => console.log("Connection Open!");
+            es.onmessage = (e) => console.log("Message:", e);
+            es.onerror = (e) => {
+                console.log("Error:", e);
+                // es.close();
+            };
+        </script>
+        "#;
+    let html = html.to_string();
+
     // build our application with a single route
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .route("/", get(|| async { Html::from(html) }))
         .route("/sse", get(sse_handler))
         .with_state(app_state);
 
