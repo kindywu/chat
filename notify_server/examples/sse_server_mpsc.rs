@@ -1,5 +1,4 @@
 use axum::{
-    debug_handler,
     extract::State,
     response::{
         sse::{Event, KeepAlive, Sse},
@@ -8,58 +7,17 @@ use axum::{
     routing::get,
     Router,
 };
-use chrono::Local;
 use dashmap::DashMap;
-use futures::StreamExt;
-use futures_util::stream::Stream;
-use nanoid::nanoid;
-use std::{convert::Infallible, ops::Deref, sync::Arc, time::Duration};
-use tokio::sync::mpsc::{self, Sender};
-use tokio_stream::wrappers::ReceiverStream;
-use tracing::warn;
-
-#[derive(Clone, Debug)]
-struct AppState {
-    map: Arc<DashMap<String, Sender<String>>>,
-}
-
-impl AppState {
-    fn new() -> Self {
-        Self {
-            map: Arc::new(DashMap::new()),
-        }
-    }
-}
-
-impl Deref for AppState {
-    type Target = DashMap<String, Sender<String>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.map
-    }
-}
+use futures::{future, stream::Stream};
+use std::{convert::Infallible, sync::Arc};
+use tokio::sync::mpsc;
+use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 
 #[tokio::main]
 async fn main() {
-    let app_state = AppState::new();
+    let broadcaster = Broadcaster::new();
 
-    let task_state = app_state.clone();
-    // 启动一个任务来发送数据到 mpsc 通道
-    tokio::spawn(async move {
-        loop {
-            for entry in task_state.map.iter() {
-                let sender = entry.value();
-                let name = entry.key();
-
-                let msg = format!("hello {name}. now is {:?}", Local::now());
-                if let Err(e) = sender.send(msg).await {
-                    warn!("error happen: {e}, {name} quit");
-                }
-            }
-
-            tokio::time::sleep(Duration::from_secs(3)).await;
-        }
-    });
+    let app_state = Arc::new(AppState { broadcaster });
 
     let html = r#"
         Open Console
@@ -75,36 +33,92 @@ async fn main() {
         "#;
     let html = html.to_string();
 
-    // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { Html::from(html) }))
+        .route("/send_message", get(send_message))
         .route("/sse", get(sse_handler))
         .with_state(app_state);
 
-    // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app.into_make_service())
+        .await
+        .unwrap();
 }
 
-#[debug_handler]
-async fn sse_handler(
-    State(state): State<AppState>,
-) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let (tx, rx) = mpsc::channel::<String>(100);
+async fn send_message(State(app_state): State<Arc<AppState>>) -> Html<&'static str> {
+    app_state.broadcaster.broadcast("message").await;
+    Html("Message sent")
+}
 
-    loop {
-        let id = nanoid!(10);
-        if state.map.insert(id.clone(), tx.clone()).is_none() {
-            break;
-        }
+async fn sse_handler(
+    State(app_state): State<Arc<AppState>>,
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    let name = nanoid::nanoid!(8);
+    let (tx, rx) = app_state.broadcaster.add_client(&name).await;
+
+    app_state
+        .broadcaster
+        .handle_client_disconnected(name.to_string(), tx);
+
+    let my_stream = ReceiverStream::<String>::new(rx).map(|res| Ok(Event::default().data(res)));
+    Sse::new(my_stream).keep_alive(KeepAlive::default())
+}
+
+struct BroadcasterInner {
+    clients: DashMap<String, mpsc::Sender<String>>,
+}
+
+pub struct Broadcaster {
+    inner: Arc<BroadcasterInner>,
+}
+
+struct AppState {
+    broadcaster: Arc<Broadcaster>,
+}
+
+impl Broadcaster {
+    pub fn new() -> Arc<Self> {
+        Arc::new(Broadcaster {
+            inner: Arc::new(BroadcasterInner {
+                clients: DashMap::new(),
+            }),
+        })
     }
 
-    let stream = ReceiverStream::new(rx).map(|v| Ok(Event::default().data(v)));
+    pub async fn add_client(&self, name: &str) -> (mpsc::Sender<String>, mpsc::Receiver<String>) {
+        let (tx, rx) = mpsc::channel::<String>(10);
 
-    // let stream = async_stream::stream! {
-    //     while let Some(message) = rx.recv().await {
-    //         yield Ok(Event::default().data(message));
-    //     }
-    // };
-    Sse::new(stream).keep_alive(KeepAlive::default())
+        tx.send(format!("welcome to {name}")).await.unwrap();
+
+        self.inner.clients.insert(name.to_owned(), tx.clone());
+
+        (tx, rx)
+    }
+
+    pub fn handle_client_disconnected(&self, name: String, tx: mpsc::Sender<String>) {
+        let inner = self.inner.clone();
+        tokio::spawn(async move {
+            tx.closed().await;
+            inner.clients.remove(&name);
+            println!(
+                "number of clients after handle_client_disconnected {}",
+                inner.clients.len()
+            );
+        });
+    }
+
+    pub async fn broadcast(&self, event: &str) {
+        let clients = self.inner.clients.clone();
+
+        println!("number of clients before broadcast: {}", clients.len());
+        let clients: Vec<_> = clients.iter().map(|kv| kv.value().clone()).collect();
+
+        let send_futures = clients.iter().map(|client| client.send(event.to_string()));
+
+        let results = future::join_all(send_futures).await;
+        println!(
+            "number of clients after broadcast: {}",
+            results.iter().filter(|f| f.is_ok()).count()
+        );
+    }
 }
