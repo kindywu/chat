@@ -46,7 +46,7 @@ async fn main() {
 }
 
 async fn send_message(State(app_state): State<Arc<AppState>>) -> Html<&'static str> {
-    app_state.broadcaster.broadcast("message").await;
+    app_state.broadcaster.broadcast("hello world").await;
     Html("Message sent")
 }
 
